@@ -66,20 +66,6 @@ class EnCryptor {
     private byte[] iv;
     private KeyStore keyStore;
 
-    EnCryptor() {
-        super();
-        try {
-            initKeyStore();
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        } catch (CertificateException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     private void initKeyStore() throws KeyStoreException, CertificateException,
             NoSuchAlgorithmException, IOException {
@@ -116,112 +102,112 @@ class EnCryptor {
         return keyGenerator.generateKey();
     }
 
-    //TODO For Previous Version than API 21
-
-    private void RSAKeyGenerator(final String alias, final Context context) {
-        String AndroidKeyStore = "AndroidKeyStore";
-        KeyStore keyStore = null;
-        try {
-            keyStore = KeyStore.getInstance(AndroidKeyStore);
-            keyStore.load(null);
-            if (!keyStore.containsAlias(alias)) {
-                Calendar start = Calendar.getInstance();
-                Calendar end = Calendar.getInstance();
-                end.add(Calendar.YEAR, 30);
-                KeyPairGeneratorSpec spec = new KeyPairGeneratorSpec.Builder(context)
-                        .setAlias(alias)
-                        .setSubject(new X500Principal("CN=" + alias))
-                        .setSerialNumber(BigInteger.TEN)
-                        .setStartDate(start.getTime())
-                        .setEndDate(end.getTime())
-                        .build();
-                KeyPairGenerator kpg = KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA, AndroidKeyStore);
-                kpg.initialize(spec);
-                kpg.generateKeyPair();
-
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    byte[] getEncryption() {
-        return encryption;
-    }
-
-    byte[] getIv() {
-        return iv;
-    }
-    private byte[] rsaEncrypt(byte[] secret ,Context context) throws Exception{
-        RSAKeyGenerator(ALIAS_NAME,context);
-        KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry) keyStore.getEntry(ALIAS_NAME, null);
-        Cipher inputCipher = Cipher.getInstance(RSA_MODE, "AndroidOpenSSL");
-        inputCipher.init(Cipher.ENCRYPT_MODE, privateKeyEntry.getCertificate().getPublicKey());
-
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        CipherOutputStream cipherOutputStream = new CipherOutputStream(outputStream, inputCipher);
-        cipherOutputStream.write(secret);
-        cipherOutputStream.close();
-        return outputStream.toByteArray();
-    }
-    public  String genAESKeyBasedOnRSA(String ENCRYPTED_KEY, Context context){
-        if (ENCRYPTED_KEY == null) {
-            byte[] key = new byte[16];
-            SecureRandom secureRandom = new SecureRandom();
-            secureRandom.nextBytes(key);
-            byte[] encryptedKey = new byte[0];
-            try {
-                encryptedKey = rsaEncrypt(key,context);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            ENCRYPTED_KEY = Base64.encodeToString(encryptedKey, Base64.DEFAULT);
-        }
-        return  ENCRYPTED_KEY;
-    }
-    private Key getSecretKeyFromRSA(Context context) throws Exception{
-        String enryptedKeyB64 = genAESKeyBasedOnRSA("ABCD",context);
-        byte[] encryptedKey = Base64.decode(enryptedKeyB64, Base64.DEFAULT);
-        byte[] key = rsaDecrypt(encryptedKey);
-        return new SecretKeySpec(key, "AES");
-    }
-
-    public String encrypt(Context context, byte[] input) throws Exception {
-        Cipher c = Cipher.getInstance(AES_MODE, "BC");
-        c.init(Cipher.ENCRYPT_MODE, getSecretKeyFromRSA(context));
-        byte[] encodedBytes = new byte[0];
-        try {
-            encodedBytes = c.doFinal(input);
-        } catch (BadPaddingException e) {
-            e.printStackTrace();
-        } catch (IllegalBlockSizeException e) {
-            e.printStackTrace();
-        }
-
-        return Base64.encodeToString(encodedBytes, Base64.DEFAULT);
-    }
-    public String decrypt(Context context, byte[] encrypted) throws Exception {
-        Cipher c = Cipher.getInstance(AES_MODE, "BC");
-        c.init(Cipher.DECRYPT_MODE, getSecretKeyFromRSA(context));
-        byte[] decodedBytes = c.doFinal(encrypted);
-        return Base64.encodeToString(decodedBytes, Base64.DEFAULT);
-    }
-    private  byte[]  rsaDecrypt(byte[] encrypted) throws Exception {
-        KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry)keyStore.getEntry(ALIAS_NAME, null);
-        Cipher output = Cipher.getInstance(RSA_MODE, "AndroidOpenSSL");
-        output.init(Cipher.DECRYPT_MODE, privateKeyEntry.getPrivateKey());
-        CipherInputStream cipherInputStream = new CipherInputStream(
-                new ByteArrayInputStream(encrypted), output);
-        ArrayList<Byte> values = new ArrayList<>();
-        int nextByte;
-        while ((nextByte = cipherInputStream.read()) != -1) {
-            values.add((byte)nextByte);
-        }
-
-        byte[] bytes = new byte[values.size()];
-        for(int i = 0; i < bytes.length; i++) {
-            bytes[i] = values.get(i).byteValue();
-        }
-        return bytes;
-    }
+//    //TODO For Previous Version than API 21
+//
+//    private void RSAKeyGenerator(final String alias, final Context context) {
+//        String AndroidKeyStore = "AndroidKeyStore";
+//        KeyStore keyStore = null;
+//        try {
+//            keyStore = KeyStore.getInstance(AndroidKeyStore);
+//            keyStore.load(null);
+//            if (!keyStore.containsAlias(alias)) {
+//                Calendar start = Calendar.getInstance();
+//                Calendar end = Calendar.getInstance();
+//                end.add(Calendar.YEAR, 30);
+//                KeyPairGeneratorSpec spec = new KeyPairGeneratorSpec.Builder(context)
+//                        .setAlias(alias)
+//                        .setSubject(new X500Principal("CN=" + alias))
+//                        .setSerialNumber(BigInteger.TEN)
+//                        .setStartDate(start.getTime())
+//                        .setEndDate(end.getTime())
+//                        .build();
+//                KeyPairGenerator kpg = KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA, AndroidKeyStore);
+//                kpg.initialize(spec);
+//                kpg.generateKeyPair();
+//
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
+//
+//    byte[] getEncryption() {
+//        return encryption;
+//    }
+//
+//    byte[] getIv() {
+//        return iv;
+//    }
+//    private byte[] rsaEncrypt(byte[] secret ,Context context) throws Exception{
+//        RSAKeyGenerator(ALIAS_NAME,context);
+//        KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry) keyStore.getEntry(ALIAS_NAME, null);
+//        Cipher inputCipher = Cipher.getInstance(RSA_MODE, "AndroidOpenSSL");
+//        inputCipher.init(Cipher.ENCRYPT_MODE, privateKeyEntry.getCertificate().getPublicKey());
+//
+//        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+//        CipherOutputStream cipherOutputStream = new CipherOutputStream(outputStream, inputCipher);
+//        cipherOutputStream.write(secret);
+//        cipherOutputStream.close();
+//        return outputStream.toByteArray();
+//    }
+//    public  String genAESKeyBasedOnRSA(String ENCRYPTED_KEY, Context context){
+//        if (ENCRYPTED_KEY == null) {
+//            byte[] key = new byte[16];
+//            SecureRandom secureRandom = new SecureRandom();
+//            secureRandom.nextBytes(key);
+//            byte[] encryptedKey = new byte[0];
+//            try {
+//                encryptedKey = rsaEncrypt(key,context);
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//            ENCRYPTED_KEY = Base64.encodeToString(encryptedKey, Base64.DEFAULT);
+//        }
+//        return  ENCRYPTED_KEY;
+//    }
+//    private Key getSecretKeyFromRSA(Context context) throws Exception{
+//        String enryptedKeyB64 = genAESKeyBasedOnRSA("ABCD",context);
+//        byte[] encryptedKey = Base64.decode(enryptedKeyB64, Base64.DEFAULT);
+//        byte[] key = rsaDecrypt(encryptedKey);
+//        return new SecretKeySpec(key, "AES");
+//    }
+//
+//    public String encrypt(Context context, byte[] input) throws Exception {
+//        Cipher c = Cipher.getInstance(AES_MODE, "BC");
+//        c.init(Cipher.ENCRYPT_MODE, getSecretKeyFromRSA(context));
+//        byte[] encodedBytes = new byte[0];
+//        try {
+//            encodedBytes = c.doFinal(input);
+//        } catch (BadPaddingException e) {
+//            e.printStackTrace();
+//        } catch (IllegalBlockSizeException e) {
+//            e.printStackTrace();
+//        }
+//
+//        return Base64.encodeToString(encodedBytes, Base64.DEFAULT);
+//    }
+//    public String decrypt(Context context, byte[] encrypted) throws Exception {
+//        Cipher c = Cipher.getInstance(AES_MODE, "BC");
+//        c.init(Cipher.DECRYPT_MODE, getSecretKeyFromRSA(context));
+//        byte[] decodedBytes = c.doFinal(encrypted);
+//        return Base64.encodeToString(decodedBytes, Base64.DEFAULT);
+//    }
+//    private  byte[]  rsaDecrypt(byte[] encrypted) throws Exception {
+//        KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry)keyStore.getEntry(ALIAS_NAME, null);
+//        Cipher output = Cipher.getInstance(RSA_MODE, "AndroidOpenSSL");
+//        output.init(Cipher.DECRYPT_MODE, privateKeyEntry.getPrivateKey());
+//        CipherInputStream cipherInputStream = new CipherInputStream(
+//                new ByteArrayInputStream(encrypted), output);
+//        ArrayList<Byte> values = new ArrayList<>();
+//        int nextByte;
+//        while ((nextByte = cipherInputStream.read()) != -1) {
+//            values.add((byte)nextByte);
+//        }
+//
+//        byte[] bytes = new byte[values.size()];
+//        for(int i = 0; i < bytes.length; i++) {
+//            bytes[i] = values.get(i).byteValue();
+//        }
+//        return bytes;
+//    }
 }
