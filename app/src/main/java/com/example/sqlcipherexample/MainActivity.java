@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     LogUtils.debug(Arrays.toString(edtSecret.getText().toString().getBytes()));
-                    enccryptionOverAPI23.encrypt(edtSecret.getText().toString().getBytes(),MainActivity.this);
+                    enccryptionOverAPI23.encrypt(edtSecret.getText().toString().getBytes());
                 } else {
                     LogUtils.debug("RSA ENTRY CIPHERTEXT: " + encryptionApi18AndAbove.encrypt(edtSecret.getText().toString()));
                 }
@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    LogUtils.debug("AES PLAINTEXT:" + enccryptionOverAPI23.decrypt(MainActivity.this));
+                    LogUtils.debug("AES PLAINTEXT:" + enccryptionOverAPI23.decrypt());
                 } else {
                     LogUtils.debug("RSA ENTRY PLAINTEXT: " + encryptionApi18AndAbove.decrypt(appPreference.getMobileNumber()));
                 }

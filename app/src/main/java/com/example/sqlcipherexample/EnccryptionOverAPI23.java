@@ -16,8 +16,8 @@ import javax.crypto.spec.GCMParameterSpec;
 
 public class EnccryptionOverAPI23 {
     private Context Context;
-    private KeyStore keyStore;
-    private static String alias = "AESalias";
+    private static String ALIAS  = "AESalias";
+    private static String AESTRANSFORMATION = "AES/GCM/NoPadding";
     private AppPreference appPreference = null;
 
     public EnccryptionOverAPI23(Context context) {
@@ -34,7 +34,7 @@ public class EnccryptionOverAPI23 {
         try {
             //Generate a key and store it in the KeyStore
             final KeyGenerator keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore");
-            final KeyGenParameterSpec keyGenParameterSpec = new KeyGenParameterSpec.Builder(alias,
+            final KeyGenParameterSpec keyGenParameterSpec = new KeyGenParameterSpec.Builder(ALIAS,
                     KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
                     .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
                     .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
@@ -50,14 +50,14 @@ public class EnccryptionOverAPI23 {
         }
     }
 
-    public String decrypt(Context context) {
+    public String decrypt() {
         byte[] decryptedBytes = null;
         try {
-            appPreference = new AppPreference(context);
+            appPreference = new AppPreference(Context);
             //Get the key
             final KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
             keyStore.load(null);
-            final KeyStore.SecretKeyEntry secretKeyEntry = (KeyStore.SecretKeyEntry) keyStore.getEntry(alias, null);
+            final KeyStore.SecretKeyEntry secretKeyEntry = (KeyStore.SecretKeyEntry) keyStore.getEntry(ALIAS, null);
             final SecretKey secretKey = secretKeyEntry.getSecretKey();
 
             String stringIV = appPreference.getIv();
@@ -86,7 +86,7 @@ public class EnccryptionOverAPI23 {
             final byte[] ivBytes = iv;
 
             //Decrypt data
-            final Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            final Cipher cipher = Cipher.getInstance(AESTRANSFORMATION);
             final GCMParameterSpec spec = new GCMParameterSpec(128, ivBytes);
             cipher.init(Cipher.DECRYPT_MODE, secretKey, spec);
             decryptedBytes = cipher.doFinal(encryptedBytes);
@@ -98,17 +98,17 @@ public class EnccryptionOverAPI23 {
         return new String(decryptedBytes);
     }
 
-    public void encrypt(final byte[] plainTextBytes,Context context) {
+    public void encrypt(final byte[] plainTextBytes) {
 
         try {
-            appPreference = new AppPreference(context);
+            appPreference = new AppPreference(Context);
             final KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
             keyStore.load(null);
-            final KeyStore.SecretKeyEntry secretKeyEntry = (KeyStore.SecretKeyEntry) keyStore.getEntry(alias, null);
+            final KeyStore.SecretKeyEntry secretKeyEntry = (KeyStore.SecretKeyEntry) keyStore.getEntry(ALIAS, null);
             final SecretKey secretKey = secretKeyEntry.getSecretKey();
 
             //Encrypt data
-            final Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            final Cipher cipher = Cipher.getInstance(AESTRANSFORMATION);
             cipher.init(Cipher.ENCRYPT_MODE, secretKey);
             final byte[] ivBytes = cipher.getIV();
             final byte[] encryptedBytes = cipher.doFinal(plainTextBytes);

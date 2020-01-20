@@ -22,13 +22,16 @@ import javax.security.auth.x500.X500Principal;
 public class EncryptionApi18AndAbove {
     private Context context;
     private KeyStore keyStore;
-    private static String alias = "alias";
+    private static String ALAS = "alias";
+    private static String RSATRANSFORMATION = "RSA/ECB/PKCS1Padding";
+    private static String ANDROIDKEYSTORE = "AndroidKeyStore";
+    private static String ALGORITHM = "RSA";
     private AppPreference appPreference = null;
 
     public EncryptionApi18AndAbove(Context context) {
         this.context = context;
         try {
-            keyStore = KeyStore.getInstance("AndroidKeyStore");
+            keyStore = KeyStore.getInstance(ANDROIDKEYSTORE);
             keyStore.load(null);
         } catch (Exception e) {
             LogUtils.debug(e.toString());
@@ -43,12 +46,12 @@ public class EncryptionApi18AndAbove {
                 end.add(Calendar.YEAR, 1);
                 KeyPairGeneratorSpec spec = new KeyPairGeneratorSpec.Builder(context)
                         .setAlias(alias)
-                        .setSubject(new X500Principal("CN=Sample Name, O=Android Authority"))
+                        .setSubject(new X500Principal("CN=NeML, O=Android Authority"))
                         .setSerialNumber(BigInteger.ONE)
                         .setStartDate(start.getTime())
                         .setEndDate(end.getTime())
                         .build();
-                KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA", "AndroidKeyStore");
+                KeyPairGenerator generator = KeyPairGenerator.getInstance(ALGORITHM, ANDROIDKEYSTORE);
                 generator.initialize(spec);
                 generator.initialize(spec);
                 generator.generateKeyPair();
@@ -65,9 +68,9 @@ public class EncryptionApi18AndAbove {
         }
         try {
             appPreference = new AppPreference(context);
-            KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry) keyStore.getEntry(createNewKeys(alias, context), null);
+            KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry) keyStore.getEntry(createNewKeys(ALAS, context), null);
             PublicKey publicKey = privateKeyEntry.getCertificate().getPublicKey();
-            Cipher inCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            Cipher inCipher = Cipher.getInstance(RSATRANSFORMATION);
             inCipher.init(Cipher.ENCRYPT_MODE, publicKey);
 
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -90,10 +93,10 @@ public class EncryptionApi18AndAbove {
         }
         try {
             appPreference = new AppPreference(context);
-            KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry) keyStore.getEntry(createNewKeys(alias, context), null);
+            KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry) keyStore.getEntry(createNewKeys(ALAS, context), null);
             PrivateKey privateKey = privateKeyEntry.getPrivateKey();
 
-            Cipher output = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            Cipher output = Cipher.getInstance(RSATRANSFORMATION);
             output.init(Cipher.DECRYPT_MODE, privateKey);
 
             CipherInputStream cipherInputStream = new CipherInputStream(
