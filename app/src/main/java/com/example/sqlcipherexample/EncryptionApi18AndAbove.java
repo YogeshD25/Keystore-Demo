@@ -23,6 +23,7 @@ public class EncryptionApi18AndAbove {
     private Context context;
     private KeyStore keyStore;
     private static String alias = "alias";
+    private AppPreference appPreference = null;
 
     public EncryptionApi18AndAbove(Context context) {
         this.context = context;
@@ -63,6 +64,7 @@ public class EncryptionApi18AndAbove {
             return text;
         }
         try {
+            appPreference = new AppPreference(context);
             KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry) keyStore.getEntry(createNewKeys(alias, context), null);
             PublicKey publicKey = privateKeyEntry.getCertificate().getPublicKey();
             Cipher inCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
@@ -73,6 +75,7 @@ public class EncryptionApi18AndAbove {
                     outputStream, inCipher);
             cipherOutputStream.write(text.getBytes("UTF-8"));
             cipherOutputStream.close();
+            appPreference.setMobileNumber(Base64.encodeToString(outputStream.toByteArray(), Base64.DEFAULT));
 
             return Base64.encodeToString(outputStream.toByteArray(), Base64.DEFAULT);
         } catch (Exception e) {
@@ -86,6 +89,7 @@ public class EncryptionApi18AndAbove {
             return text;
         }
         try {
+            appPreference = new AppPreference(context);
             KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry) keyStore.getEntry(createNewKeys(alias, context), null);
             PrivateKey privateKey = privateKeyEntry.getPrivateKey();
 
