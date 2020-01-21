@@ -117,4 +117,52 @@ public class EncryptionApi18AndAbove {
         }
         return text;
     }
+
+    //TODO Sealed Object Cipher
+    public PublicKey getPublicKeyForEncrypt() {
+        final KeyStore keyStore;
+        PublicKey publicKey = null;
+        try {
+            keyStore = KeyStore.getInstance("AndroidKeyStore");
+            keyStore.load(null);
+            KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry) keyStore.getEntry(createNewKeys(ALAS, context), null);
+            publicKey = privateKeyEntry.getCertificate().getPublicKey();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return publicKey;
+    }
+    public PrivateKey getPrivateKeyForDecrypt() {
+        final KeyStore keyStore;
+        PrivateKey privateKey = null;
+        try {
+            keyStore = KeyStore.getInstance("AndroidKeyStore");
+            keyStore.load(null);
+            KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry) keyStore.getEntry(createNewKeys(ALAS, context), null);
+            privateKey = privateKeyEntry.getPrivateKey();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return privateKey;
+    }
+    public Cipher getCipherForDecrypt(PrivateKey privateKey){
+        Cipher cipher = null;
+        try {
+            cipher = Cipher.getInstance(RSATRANSFORMATION);
+            cipher.init(Cipher.DECRYPT_MODE, privateKey);
+        } catch (Throwable e) {
+            LogUtils.debug(e.toString());
+        }
+        return cipher;
+    }
+    public Cipher getCipherForEncrypt(PublicKey publicKey){
+        Cipher cipher = null;
+        try {
+            cipher = Cipher.getInstance(RSATRANSFORMATION);
+            cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+        } catch (Throwable e) {
+            LogUtils.debug(e.toString());
+        }
+        return cipher;
+    }
 }

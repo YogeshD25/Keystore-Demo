@@ -5,7 +5,6 @@ import android.content.Context;
 import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
-
 import java.security.KeyStore;
 import java.util.Arrays;
 
@@ -19,10 +18,15 @@ public class EnccryptionOverAPI23 {
     private static String ALIAS  = "AESalias";
     private static String AESTRANSFORMATION = "AES/GCM/NoPadding";
     private AppPreference appPreference = null;
+    private static String ANDROIDKEYSTORE = "AndroidKeyStore";
+    private KeyStore keyStore;
 
     public EnccryptionOverAPI23(Context context) {
         this.Context = context;
         try {
+
+            keyStore = KeyStore.getInstance(ANDROIDKEYSTORE);
+            keyStore.load(null);
             generateSecretKeyDemo();
         } catch (Exception e) {
             LogUtils.debug(e.toString());
@@ -33,29 +37,31 @@ public class EnccryptionOverAPI23 {
     public void generateSecretKeyDemo() {
         try {
             //Generate a key and store it in the KeyStore
-            final KeyGenerator keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore");
-            final KeyGenParameterSpec keyGenParameterSpec = new KeyGenParameterSpec.Builder(ALIAS,
-                    KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
-                    .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-                    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-                    //.setUserAuthenticationRequired(true) //requires lock screen, invalidated if lock screen is disabled
-                    //.setUserAuthenticationValidityDurationSeconds(120) //only available x seconds from password authentication. -1 requires finger print - every time
-                    .setRandomizedEncryptionRequired(true) //different ciphertext for same plaintext on each call
-                    .build();
-            keyGenerator.init(keyGenParameterSpec);
-            keyGenerator.generateKey();
+            if (!keyStore.containsAlias(ALIAS)) {
+                final KeyGenerator keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROIDKEYSTORE);
+                final KeyGenParameterSpec keyGenParameterSpec = new KeyGenParameterSpec.Builder(ALIAS,
+                        KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
+                        .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                        .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                        //.setUserAuthenticationRequired(true) //requires lock screen, invalidated if lock screen is disabled
+                        //.setUserAuthenticationValidityDurationSeconds(120) //only available x seconds from password authentication. -1 requires finger print - every time
+                        .setRandomizedEncryptionRequired(true) //different ciphertext for same plaintext on each call
+                        .build();
+                keyGenerator.init(keyGenParameterSpec);
+                keyGenerator.generateKey();
+            }
 
         } catch (Throwable e) {
             LogUtils.debug(e.toString());
         }
     }
 
-    public String decrypt() {
+        public String decrypt() {
         byte[] decryptedBytes = null;
         try {
             appPreference = new AppPreference(Context);
             //Get the key
-            final KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
+            final KeyStore keyStore = KeyStore.getInstance(ANDROIDKEYSTORE);
             keyStore.load(null);
             final KeyStore.SecretKeyEntry secretKeyEntry = (KeyStore.SecretKeyEntry) keyStore.getEntry(ALIAS, null);
             final SecretKey secretKey = secretKeyEntry.getSecretKey();
@@ -102,7 +108,7 @@ public class EnccryptionOverAPI23 {
 
         try {
             appPreference = new AppPreference(Context);
-            final KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
+            final KeyStore keyStore = KeyStore.getInstance(ANDROIDKEYSTORE);
             keyStore.load(null);
             final KeyStore.SecretKeyEntry secretKeyEntry = (KeyStore.SecretKeyEntry) keyStore.getEntry(ALIAS, null);
             final SecretKey secretKey = secretKeyEntry.getSecretKey();
@@ -119,6 +125,44 @@ public class EnccryptionOverAPI23 {
         } catch (Throwable e) {
             LogUtils.debug(e.toString());
         }
+    }
+
+    //TODO Sealed Object Cipher
+    public SecretKey getSecretKey() {
+        final KeyStore keyStore;
+        SecretKey secretKey = null;
+        try {
+            keyStore = KeyStore.getInstance(ANDROIDKEYSTORE);
+            keyStore.load(null);
+            final KeyStore.SecretKeyEntry secretKeyEntry = (KeyStore.SecretKeyEntry) keyStore.getEntry(ALIAS, null);
+            secretKey = secretKeyEntry.getSecretKey();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+            return secretKey;
+    }
+    public Cipher getCipherForDecrypt(SecretKey secretKey,byte[] ivbytes){
+        Cipher cipher = null;
+        try {
+            cipher = Cipher.getInstance(AESTRANSFORMATION);
+             GCMParameterSpec spec = new GCMParameterSpec(128, ivbytes);
+                cipher.init(Cipher.DECRYPT_MODE, secretKey, spec);
+
+        } catch (Throwable e) {
+            LogUtils.debug(e.toString());
+        }
+        return cipher;
+    }
+    public Cipher getCipherForEncrypt(SecretKey secretKey){
+        Cipher cipher = null;
+        try {
+            cipher = Cipher.getInstance(AESTRANSFORMATION);
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+
+        } catch (Throwable e) {
+            LogUtils.debug(e.toString());
+        }
+        return cipher;
     }
 }
 
